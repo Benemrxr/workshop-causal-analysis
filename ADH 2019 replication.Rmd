@@ -1,0 +1,45 @@
+---
+title: "ADH 2019 replication"
+author: "Michael Keller and Benedikt Marxer"
+date: "4 4 2022"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+here::i_am("ADH 2019 replication.Rmd")
+library(here)
+library(tidyverse)
+library(haven)
+```
+
+# About ADH 2019
+
+When Work Disappears: Manufacturing Decline and the Falling Marriage Market Value of Young Men.AER: Insights 2019, 1(2): 161–178. DOI: https://doi.org/10.1257/aeri.20180010
+
+# Setup
+
+Download the replication files: https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&type=project
+Make sure to unzip the files and move the top folder (*"116320-V1"*) to the top level of this repository (blocked in the .gitignore). 
+
+
+# Read ADH 2019 data
+
+Replication data from:  https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&type=project
+
+```{r cars}
+workfile9014wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
+czone9014_percentiles <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "czone9014_percentiles.dta"))
+```
+
+## Equation (1)
+
+Equation (1): $$\Delta IP_{i \tau}^{cu} = \sum_j \frac{L_{ij90}}{L_{i90}} \Delta IP_{j \tau}^{cu} $$
+
+Where $\Delta IP_{j \tau}^{cu} = \Delta M_{j \tau}^{cu} / (Y_{j91} + M_{j91 - X_{j91}})$ is the growth of Chinese import penetration in the US for industry $j$ over period $\tau$, which in the authors' data inlude the time intervals 1990 to 2000 and 2000 to 2014.
+
+
