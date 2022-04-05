@@ -255,9 +255,8 @@ div.tocify {
 <h1><span class="header-section-number">2</span> Setup</h1>
 <p>Download the replication files: <a href="https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&amp;type=project" class="uri">https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&amp;type=project</a> Make sure to unzip the files and move the top folder (<em>“116320-V1”</em>) to the top level of this repository (blocked in the .gitignore).</p>
 </div>
-<div id="read-adh-2019-data" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Read ADH 2019 data</h1>
-<p>Replication data from: <a href="https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&amp;type=project" class="uri">https://www.openicpsr.org/openicpsr/project/116320/version/V1/view?path=/openicpsr/116320/fcr:versions/V1&amp;type=project</a></p>
+<div id="load-data" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Load data</h1>
 <pre class="r"><code>workfile9014wwd &lt;- read_dta(here::here(&quot;116320-V1&quot;, &quot;ADH-WWD-AERi-Data&quot;, &quot;dta&quot;, &quot;workfile9014wwd.dta&quot;))
 czone9014_percentiles &lt;- read_dta(here::here(&quot;116320-V1&quot;, &quot;ADH-WWD-AERi-Data&quot;, &quot;dta&quot;, &quot;czone9014_percentiles.dta&quot;))</code></pre>
 <div id="equation-1" class="section level2" number="3.1">
