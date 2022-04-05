@@ -19,7 +19,7 @@ library(haven)
 
 # About ADH 2019
 
-When Work Disappears: Manufacturing Decline and the Falling Marriage Market Value of Young Men.AER: Insights 2019, 1(2): 161–178. DOI: https://doi.org/10.1257/aeri.20180010
+When Work Disappears: Manufacturing Decline and the Falling Marriage Market Value of Young Men. AER: Insights 2019, 1(2): 161–178. DOI: https://doi.org/10.1257/aeri.20180010
 
 # Setup
 
@@ -34,6 +34,54 @@ Make sure to unzip the files and move the top folder (*"116320-V1"*) to the top 
 workfile9014wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
 czone9014_percentiles <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "czone9014_percentiles.dta"))
 ```
+
+
+## About the data: {.tabset}
+
+### First data set: workﬁle9014wwd.dta
+
+Provides data for 722 Commuting Zones (CZs) times 2 time periods (1990-2000,2000-2014). This ﬁle is the basis for all tabulated regression results. 
+
+
+```{r overviewd1, eval=FALSE}
+# library(summarytools)
+# dfSummary(workfile9014wwd$czone)
+workfile9014wwd$czone # iIdentifies Community Zone (722)
+workfile9014wwd$statefip # indicates the State that comprises most of the CZs population
+
+workfile9014wwd$yr # identifies the time period (1990-2000, 2000-2014)
+workfile9014wwd$t2 # also identifies the time periods (1 and 2)
+
+workfile9014wwd$reg_midatl # identifies the Census division of the CZ (8 divisions)
+
+workfile9014wwd$timepwt24 # weight variable, indicates each CZ’s share in the start-of-period population of the 48 U.S. mainland states, multiplied by 1/10 of the period length (10 or 14 years).
+
+workfile9014wwd$d_impusch_p9 captures # captures a CZ’s exposure to growing import penetration from China
+workfile9014wwd$d_impuschm_p9cen  # male component
+workfile9014wwd$d_impuschf_p9cen # female component
+
+# The variables d_impotch*_p9cen_lag denote the corresponding instruments using other developed countries’ imports from China. All other variables with preﬁx “d_” are outcome variables of the regression analysis and are measured as 10-year equivalent changes. All variables with preﬁx “l_” are start-of-period values that are used either for descriptive statistics or as control variables. Finally, variables starting with “cum_mort” measure cumulate per-decade mortality.
+
+```
+
+### Second data set: czone9014_percentiles.dta
+
+Provides additional data 
+
+```{r overviewd2, , eval=FALSE}
+# contains the initial levels and subsequent changes of all percentiles of the gender-speciﬁc distributions of annual wage and salary earnings in a CZ. 
+czone9014_percentiles$czone
+czone9014_percentiles$yr
+
+czone9014_percentiles$l_inc1839m_p1 # income males percentile 1 (All variables with preﬁx “l_” are start-of-period values that are used either for descriptive statistics or as control variables.)
+czone9014_percentiles$l_inc1839f_p1 # income females percentile 1
+
+czone9014_percentiles$d_inc1839m_p1 # income males percentile 1 (All variables with preﬁx “d_” are outcome variables of the regression analysis and are measured as 10-year equivalent changes.)
+czone9014_percentiles$d_inc1839f_p1 # income females percentile 1
+
+
+```
+
 
 ## Equation (1)
 
