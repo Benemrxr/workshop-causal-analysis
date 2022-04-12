@@ -1,0 +1,315 @@
+---
+title: "ADH 2013 replication"
+author: "Michael Keller"
+date: "11 4 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+here::i_am("ADH 2019 replication.Rmd")
+library(here)
+library(tidyverse)
+library(haven)
+library(bartik.weight)
+library(AER)
+library(stargazer)
+```
+
+
+
+Versuch, Import penetration zu rekonstruieren
+
+Daten
+
+
+```{r loaddata}
+workfile9014wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
+#Main data set
+
+workfile7090wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile7090wwd.dta"))
+
+
+sic87dd_exposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_exposure_9114.dta"))
+# Imports from China by sic87dd industry in US and other wealthy countries, 1991-2014.
+
+china9114 <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "china9114.dta"))
+# Trade flows by sic87dd industry, importer, exporter, and year 1991-2014.
+
+sic87dd_ioexposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_ioexposure.dta"))
+# Change upstream and downstream import exposure by sic87dd industry, 1991-2011 and subperiods.
+
+czone9014_percentiles <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "czone9014_percentiles.dta"))
+
+cbp_czone_merged <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cbp_czone_merged.dta"))
+#provides employment counts by county by industry. The employment numbers are often reported only in brackets.
+
+industry_codes_80_90_2000 <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cw_ind1990_ind1990ddx.dta"))
+#aggregates the consistent Census industry code ind1990 to a balanced panel of industries for the 1980, 1990 and 2000 Census and the 2006-2008 ACS
+
+industry_shares_90 <- read.csv(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "ADH_local.csv"))
+#Industry shares aus Bartik Paket
+
+cw_puma1990_czone <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cw_puma1990_czone.dta"))
+
+
+```
+
+
+```{r}
+rm(list = ls())
+```
+
+
+Andere Namen
+```{r}
+master <- workfile9014wwd
+exposure <- sic87dd_exposure
+trade_flows <- china9114
+ind_shares_data <- cbp_czone_merged
+ind_shares_package <- bartik.weight::ADH_local
+cw_puma1990_czone
+
+workfile7090wwd
+trade_flows
+
+
+master$l
+exposure
+trade_flows
+ind_shares_data
+ind_shares_package
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1st stage: x = a_0 + a_1*B + n  mit B=z*g
+2nd stage: y = b_0 + b_1*x + e
+
+
+# Old approach
+
+All relevant data in workfile9014wwd/master
+x = Change in import exposure -> workfile9014wwd$d_impusch_p9 (endogen)
+y = change manufacturing employment -> workfile9014wwd$d_sh_empl_mfg_age1839 (outcome)
+z = Chinese export growth -> workfile9014wwd$d_impotch_p9_lag (instrument für endogenes x)
+
+
+```{r}
+
+iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9  +
+                                        l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                        l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                        reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                        reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                        l_sh_pop_oth + l_sh_pop_hispanic  
+                                        
+                                        | d_impotch_p9_lag +
+                                          l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                          l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                          reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                          reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                          l_sh_pop_oth + l_sh_pop_hispanic,      weights = timepwt24 ,  data = workfile9014wwd)
+summary(iv_old)
+
+
+covars <- c("l_shind_manuf_cbp",  "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen", "reg_wscen", "reg_mount", "reg_pacif", "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
+
+
+stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufacturing employment", covariate.labels = c("Exposure to growing imports"), keep = c("d_impusch_p9", "Constant"), style = "default", type = "text")
+```
+
+
+```{r}
+
+iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9  +
+                                        l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                        l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                        reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                        reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                        l_sh_pop_oth + l_sh_pop_hispanic  
+                                        
+                                        | d_impotch_p9_lag +
+                                          l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                          l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                          reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                          reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                          l_sh_pop_oth + l_sh_pop_hispanic,      weights = timepwt24 ,  data = master)
+summary(iv_old)
+
+
+covars <- c("l_shind_manuf_cbp",  "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen", "reg_wscen", "reg_mount", "reg_pacif", "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
+
+
+stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufacturing employment", covariate.labels = c("Exposure to growing imports"), keep = c("d_impusch_p9", "Constant"), style = "default", type = "text")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# New approach
+x = Change in import exposure -> workfile9014wwd$d_impusch_p9 /master
+y = change manufacturing employment -> workfile9014wwd$d_sh_empl_mfg_age1839 / master 
+z = Manufacturing shares -> 
+g = Chinese export growth -> workfile9014wwd$d_impotch_p9_lag
+
+
+## Step 1: Construct exposure variable. Equation 1 in paper
+
+
+
+1.1 Import penetration delta IP_jt^cu = delta M_jt^cu/(Yj91 + Mj91 - xj91)
+
+
+Hier G
+```{r}
+# Industry shares aus Paket. sh_ind_ Anteil Beschäfitung in jeder Industrie pro CZ.
+
+ind_shares_package <- subset(ind_shares_package, select = -c(X))
+ind_shares_package
+
+
+exposure
+penetration_j
+
+names(ind_shares_package)[3] <- "industry_code"
+names(ind_shares_package)[4] <- "industry_share"
+#exposure Importe aus China in USA für jede Industre
+
+penetration_j <- exposure
+
+penetration_j$pen_91 <- penetration_j$l_import_otch_1991/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+penetration_j$pen_00 <- penetration_j$l_import_otch_2000/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+penetration_j$pen_14 <- penetration_j$l_import_otch_2014/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+
+penetration_j <- penetration_j[c("sic87dd", "pen_91", "pen_00", "pen_14")]
+names(penetration_j)[1] <- "industry_code"
+
+penetration_j$d_00_91 <- penetration_j$pen_00 - penetration_j$pen_91
+penetration_j$d_14_00 <- penetration_j$pen_14 - penetration_j$pen_00
+penetration_j$d_14_91 <- penetration_j$pen_14 - penetration_j$pen_91
+
+
+
+
+global_1990 <- penetration_j$d_00_91
+global_2000 <- penetration_j$d_14_00
+
+global <- rep(penetration_j$industry_code,2)
+names(global)[1] <- "ind"
+
+global$year <- c(rep(1990,794/2), rep(2000, 794,2)
+
+penetration_j <- merge(penetration_j, ind_shares_package, all.x=TRUE)
+
+penetration_j$d_00_91_adjusted <- penetration_j$d_00_91*penetration_j$industry_share
+penetration_j$d_14_00_adjusted <- penetration_j$d_14_00*penetration_j$industry_share
+penetration_j$d_14_91_adjusted <- penetration_j$d_14_91*penetration_j$industry_share
+
+global <- data.frame(
+  ind <- c(rep(penetration_j$industry_code,2)),
+  year <- c(rep(1990, 397), rep(2000, 397)),
+  penetration  <- c(penetration_j$d_00_91, penetration_j$d_14_00)
+)
+
+names(global)[1] <- "ind"
+names(global)[2] <- "year"
+names(global)[3] <- "penetration"
+
+length(global)
+global
+
+```
+
+Shares Wide Format
+```{r}
+names(ind_shares_package)[3] <- "ind"
+names(ind_shares_package)[3] <- "industry_code"
+
+ind_shares_package
+
+bartik.weight::ADH_local %>%
+    mutate(ind = str_glue("t{year}_sh_ind_{ind}")) %>%
+    spread(ind, sh_ind_, fill = 0) %>%
+    print() -> ADH_local_wide
+
+```
+
+
+
+```{r}
+master
+```
+
+```{r}
+penetration_j
+```
+
+
+
+```{r}
+# Prepare variables in the master tibble
+y = "d_sh_empl_mfg_age1839"     # change manufactuting employment rate
+x = "d_impusch_p9"    # Growth imports from China to US
+
+controls = c("l_shind_manuf_cbp", "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen",  "reg_wscen", "reg_mount", "reg_pacif" , "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
+
+
+weight = "timepwt24"  # Weight noch unklar
+
+# Prepare variables in the local tibble
+# This function operates row-wise on dataframes, and element-wise among the outcomes of ps objects. The elements of setdiff(x,y) are those elements in x but not in y. The definition is taken to match the version in the base package. 
+Z = setdiff(names(ADH_local_wide), c("czone", "year"))  # Funktion, damit Z nur Industry share von 2000 
+
+# Prepare variables in the global tibble
+G = "penetration" # Globale Wachstumsrate: Growth imports from China to other rich countries
+
+# Estimate the weight (alpha) and the IV estimates (beta)
+bw = bw(master, y, x, controls, weight, ADH_local_wide, Z, global, G)  # Master: Master Datensatz
+bw                                                                         # y outcome variable
+                                                                           # x endogene Variable
+                                                                           # controls Kontrollvariable
+                                                                           # weight gewichtete Variable, unklar
+                                                                           # ADH_local2 Datensatz local industry share
+                                                                           # Z Name Indusry share variablen in ADH_local2
+                                                                           # ADH_global Datensatz globale Wachstumsrate
+                                                                           # G Globale Wachstumsrate
+
+
+                                      
+ 
+```
+
+
+```{r}
+setdiff(names(ind_shares_package_wide), c("czone", "year"))
+```
+
+
+```{r}
+setdiff(names(ADH_local_wide), c("czone", "year"))
