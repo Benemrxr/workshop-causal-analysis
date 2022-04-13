@@ -1,0 +1,249 @@
+---
+title: "file_3"
+author: "Michael Keller"
+date: "13 4 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+here::i_am("ADH 2019 replication.Rmd")
+library(here)
+library(tidyverse)
+library(haven)
+library(bartik.weight)
+library(AER)
+library(stargazer)
+```
+
+
+Data
+
+```{r}
+#Main data set
+workfile9014wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
+
+# Imports from China by sic87dd industry in US and other wealthy countries, 1991-2014.
+sic87dd_exposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_exposure_9114.dta"))
+
+# Trade flows by sic87dd industry, importer, exporter, and year 1991-2014.
+china9114 <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "china9114.dta"))
+
+# Change upstream and downstream import exposure by sic87dd industry, 1991-2011 and subperiods.
+sic87dd_ioexposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_ioexposure.dta"))
+
+#provides employment counts by county by industry. The employment numbers are often reported only in brackets.
+cbp_czone_merged <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cbp_czone_merged.dta"))
+
+#Industry shares aus Bartik Paket
+industry_shares_90 <- bartik.weight::ADH_local
+```
+
+
+
+Different variables with easier names (same as in Bartik package example)
+```{r}
+master <- workfile9014wwd
+exposure <- sic87dd_exposure
+trade_flows <- china9114
+ind_shares_data <- cbp_czone_merged
+ind_shares_package <- industry_shares_90
+```
+
+
+
+
+
+
+# Old approach
+
+
+1st stage: x = a_0 + a_1*B + n  mit B=z*g
+2nd stage: y = b_0 + b_1*x + e
+
+
+x = Change in import exposure -> master$d_impusch_p9 (endogen)
+y = change manufacturing employment -> master$d_sh_empl_mfg_age1839 (outcome)
+z = Chinese export growth -> master$d_impotch_p9_lag (instrument for endogenous x)
+
+
+Replicates Table 1
+
+overall trade shock (male+female) 
+```{r}
+iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9  +
+                                        l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                        l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                        reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                        reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                        l_sh_pop_oth + l_sh_pop_hispanic  
+                                        
+                                        | d_impotch_p9_lag +
+                                          l_shind_manuf_cbp + l_sh_popedu_c +l_sh_popfborn + 
+                                          l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
+                                          reg_midatl +reg_encen + reg_wncen + reg_satl + reg_escen + 
+                                          reg_wscen +reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +  
+                                          l_sh_pop_oth + l_sh_pop_hispanic,      weights = timepwt24 ,  data = master)
+summary(iv_old)
+
+
+covars <- c("l_shind_manuf_cbp",  "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen", "reg_wscen", "reg_mount", "reg_pacif", "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
+
+
+stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufacturing employment", covariate.labels = c("Exposure to growing imports"), keep = c("d_impusch_p9", "Constant"), style = "default", type = "text")
+```
+
+
+
+
+
+# New approach
+
+We keep the strucutre as in the example provided for the bartik weights package (https://rdrr.io/github/jjchern/bartik.weight/f/README.md)
+
+x = Change in import exposure -> master$d_impusch_p9
+y = change manufacturing employment -> master$d_sh_empl_mfg_age1839  
+z = industry shares -> ind_shares_package
+g = Chinese export growth -> workfile9014wwd$d_impotch_p9_lag
+
+
+## Step 1: Construct difference in import penetration variables. Equation 1 in paper
+
+ Import penetration delta IP_jt^cu = delta M_jt^cu/(Yj91 + Mj91 - xj91)
+
+
+x and y are the same variables as in the old approach. The import exposure is provided as one single variable by the authors (the z: d_impotch_p9_lag). In order to use the bartik.weight R package we need two seperate inputs: The shares z and the shifts g
+
+z is the industry share
+g the measure for import penetration
+
+
+This approach uses as z the weights provided by the bartik.weight package because the authors do not provide them in their data set.
+
+
+
+```{r}
+#Convert industry shares to wide format as suggested by authors in package description. One could also use the file provided in wide format but this step would allow to transform any file which would probably be supplied in long format.
+
+ind_shares_package %>%
+    mutate(ind = str_glue("t{year}_sh_ind_{ind}")) %>%
+    spread(ind, sh_ind_, fill = 0) %>%
+    print() -> ind_shares_package_wide
+
+```
+
+
+This is to construct the import penetration measure (the G)
+
+```{r}
+# New DataFrame
+penetration_j <- exposure
+
+#pen_91, pen_00, pen_14: Import absorption. Calculated as in equation 3. Imports of each industry j divided by domestic market size plus net imports of that industry. 
+penetration_j$pen_91 <- penetration_j$l_import_otch_1991/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+penetration_j$pen_00 <- penetration_j$l_import_otch_2000/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+penetration_j$pen_14 <- penetration_j$l_import_otch_2014/(penetration_j$market1991+penetration_j$l_import_otch_1991)
+
+#Keep only relevant columns to reduce size of DataFrame
+penetration_j <- penetration_j[c("sic87dd", "pen_91", "pen_00", "pen_14")]
+
+# Remane industry code
+names(penetration_j)[1] <- "industry_code"
+
+#d_xx_xx: Difference of import penetration within period
+penetration_j$d_00_91 <- penetration_j$pen_00 - penetration_j$pen_91 # Difference in import penetration 1991-2000
+penetration_j$d_14_00 <- penetration_j$pen_14 - penetration_j$pen_00 # Difference in import penetration 2000-2014
+penetration_j$d_14_91 <- penetration_j$pen_14 - penetration_j$pen_91 # Difference in import penetration 1991-2014
+
+
+#Construct global DataFrame
+#global_1990 <- penetration_j$d_00_91
+#global_2000 <- penetration_j$d_14_00
+
+#global <- rep(penetration_j$industry_code,2)
+#names(global)[1] <- "ind"
+
+#global$year <- c(rep(1990,794/2), rep(2000, 794,2)
+
+#penetration_j <- merge(penetration_j, ind_shares_package, all.x=TRUE)
+
+#penetration_j$d_00_91_adjusted <- penetration_j$d_00_91*penetration_j$industry_share
+#penetration_j$d_14_00_adjusted <- penetration_j$d_14_00*penetration_j$industry_share
+#penetration_j$d_14_91_adjusted <- penetration_j$d_14_91*penetration_j$industry_share
+
+#Construct global DataFrame
+global <- data.frame(
+  ind <- c(rep(penetration_j$industry_code,2)),
+  year <- c(rep(1990, 397), rep(2000, 397)),
+  penetration  <- c(penetration_j$d_00_91, penetration_j$d_14_00)
+)
+
+
+# Remane columns
+names(global)[1] <- "ind"
+names(global)[2] <- "year"
+names(global)[3] <- "penetration"
+```
+
+
+Here we ran into a problem: The global DataFrame contains 397 industries in each year (794 in total). The bartik.package data for 1990 contains only 390 industries per year
+```{r}
+# 397 industry codes in global
+length(unique(global$ind))
+
+# 390 industry codes in ADH_local
+length(unique(ADH_local$ind))
+
+
+# Subset global such that it contains only industries that are also in the bartik.package. Save in new DataFrame global_2
+
+# 1) unique industry codes in bartik.package
+ind_adh <- unique(ADH_local$ind)
+
+# 2) Subset global accordingly and save in new DataFrame
+global_2 <- subset(global, ind%in%ind_adh)
+```
+
+Run estimation
+
+```{r}
+# Prepare variables in the master tibble
+y = "d_sh_empl_mfg_age1839"     # change manufactuting employment rate
+x = "d_impusch_p9"    # Growth imports from China to US
+
+controls = c("l_shind_manuf_cbp", "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen",  "reg_wscen", "reg_mount", "reg_pacif" , "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
+
+
+weight = "timepwt24"  # Weighted by population
+
+# Prepare variables in the local tibble
+# This function operates row-wise on dataframes, and element-wise among the outcomes of ps objects. The elements of setdiff(x,y) are those elements in x but not in y. The definition is taken to match the version in the base package. 
+Z = setdiff(names(ADH_local_wide), c("czone", "year"))  # Funktion, damit Z nur Industry share von 2000 
+
+# Prepare variables in the global tibble
+G = "penetration" # Globale Wachstumsrate: Growth imports from China to other rich countries
+
+# Estimate the weight (alpha) and the IV estimates (beta)
+bw = bw(master, y, x, controls, weight, ind_shares_package_wide, Z, global_2, G)  # Master: Master Datensatz
+bw                                                                         # y outcome variable
+                                                                           # x endogene Variable
+                                                                           # controls Kontrollvariable
+                                                                           # weight gewichtete Variable, unklar
+                                                                           # ADH_local2 Datensatz local industry share
+                                                                           # Z Name Indusry share variablen in ADH_local2
+                                                                           # ADH_global Datensatz globale Wachstumsrate
+                                                                           # G Globale Wachstumsrate
+
+
+                                      
+max(bw$alpha)
+
+View(bw)
+```
