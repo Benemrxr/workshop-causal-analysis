@@ -1,20 +1,19 @@
 ---
-title: "file_3"
-author: "Michael Keller"
+title: "ADH 2019 replication"
+author: "Michael Keller and Benedikt Marxer"
 date: "13 4 2022"
-output: html_document
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    toc_float: true
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 
 Load packages
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-here::i_am("ADH 2019 replication.Rmd")
+here::i_am("replication_ADH_2019.Rmd")
 library(here)
 library(tidyverse)
 library(haven)
@@ -24,43 +23,42 @@ library(stargazer)
 ```
 
 
-Data
+Data, following the Bartik package naming convention
 
-```{r}
+```{r import-michael, eval=FALSE, include=FALSE}
 #Main data set
-workfile9014wwd <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
+master <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
 
 # Imports from China by sic87dd industry in US and other wealthy countries, 1991-2014.
-sic87dd_exposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_exposure_9114.dta"))
+exposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_exposure_9114.dta"))
 
 # Trade flows by sic87dd industry, importer, exporter, and year 1991-2014.
-china9114 <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "china9114.dta"))
-
-# Change upstream and downstream import exposure by sic87dd industry, 1991-2011 and subperiods.
-sic87dd_ioexposure <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "sic87dd_ioexposure.dta"))
+trade_flows <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "china9114.dta"))
 
 #provides employment counts by county by industry. The employment numbers are often reported only in brackets.
-cbp_czone_merged <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cbp_czone_merged.dta"))
+ind_shares_data <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "cbp_czone_merged.dta"))
 
 #Industry shares aus Bartik Paket
-industry_shares_90 <- bartik.weight::ADH_local
+ind_shares_package <- bartik.weight::ADH_local
 ```
 
 
+```{r import-benedikt}
+#Main data set
+master <- read_dta(here::here("116320-V1", "ADH-WWD-AERi-Data", "dta", "workfile9014wwd.dta"))
 
-Different variables with easier names (same as in Bartik package example)
-```{r}
-master <- workfile9014wwd
-exposure <- sic87dd_exposure
-trade_flows <- china9114
-ind_shares_data <- cbp_czone_merged
-ind_shares_package <- industry_shares_90
+# Imports from China by sic87dd industry in US and other wealthy countries, 1991-2014.
+exposure <- read_dta(here::here("ddorn-d2", "sic87dd_exposure_9114.dta"))
+
+# Trade flows by sic87dd industry, importer, exporter, and year 1991-2014.
+trade_flows <- read_dta(here::here("ddorn-d1", "china9114.dta"))
+
+#provides employment counts by county by industry. The employment numbers are often reported only in brackets.
+ind_shares_data <- read_dta(here::here("116320-V1/BHJ Replication Archive/MonteCarlo/Raw", "cbp_czone_merged.dta"))
+
+#Industry shares aus Bartik Paket
+ind_shares_package <- bartik.weight::ADH_local
 ```
-
-
-
-
-
 
 # Old approach
 
@@ -103,10 +101,9 @@ stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufactur
 
 
 
-
 # New approach
 
-We keep the strucutre as in the example provided for the bartik weights package (https://rdrr.io/github/jjchern/bartik.weight/f/README.md)
+We keep the structure as in the example provided for the bartik weights package (https://rdrr.io/github/jjchern/bartik.weight/f/README.md)
 
 x = Change in import exposure -> master$d_impusch_p9
 y = change manufacturing employment -> master$d_sh_empl_mfg_age1839  
@@ -162,22 +159,6 @@ penetration_j$d_00_91 <- penetration_j$pen_00 - penetration_j$pen_91 # Differenc
 penetration_j$d_14_00 <- penetration_j$pen_14 - penetration_j$pen_00 # Difference in import penetration 2000-2014
 penetration_j$d_14_91 <- penetration_j$pen_14 - penetration_j$pen_91 # Difference in import penetration 1991-2014
 
-
-#Construct global DataFrame
-#global_1990 <- penetration_j$d_00_91
-#global_2000 <- penetration_j$d_14_00
-
-#global <- rep(penetration_j$industry_code,2)
-#names(global)[1] <- "ind"
-
-#global$year <- c(rep(1990,794/2), rep(2000, 794,2)
-
-#penetration_j <- merge(penetration_j, ind_shares_package, all.x=TRUE)
-
-#penetration_j$d_00_91_adjusted <- penetration_j$d_00_91*penetration_j$industry_share
-#penetration_j$d_14_00_adjusted <- penetration_j$d_14_00*penetration_j$industry_share
-#penetration_j$d_14_91_adjusted <- penetration_j$d_14_91*penetration_j$industry_share
-
 #Construct global DataFrame
 global <- data.frame(
   ind <- c(rep(penetration_j$industry_code,2)),
@@ -220,7 +201,6 @@ x = "d_impusch_p9"    # Growth imports from China to US
 
 controls = c("l_shind_manuf_cbp", "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen",  "reg_wscen", "reg_mount", "reg_pacif" , "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
 
-
 weight = "timepwt24"  # Weighted by population
 
 # Prepare variables in the local tibble
@@ -245,5 +225,23 @@ bw                                                                         # y o
                                       
 max(bw$alpha)
 
-View(bw)
+bw %>%
+  top_n(5, alpha) %>%
+  arrange(desc(alpha)) %>%
+  mutate(ind = case_when(
+    ind == "3571" ~ "Electronic Computers",
+    ind == "3944" ~ "Games and Toys",
+    ind == "3651" ~ "Household Audio and Video",
+    ind == "3661" ~ "Telephone Apparatus",
+    ind == "3577" ~ "Computer Equipment",
+    ind == "3663" ~ "Radio and Television Broadcasting and Communications Equipment",
+    ind == "3674" ~ "Semiconductors and Related Devices",
+    ind == "3144" ~ "Women's Footwear, Except Athletic"
+  )) %>%
+  rename(g = penetration)
+
+# Open question: Why do we estimate the effect for both time-periods?
+
+# Open task: Construct a similar table as Table A1 in the GPSS OA (Summary of the Rotemberg weights: China shock)
+
 ```

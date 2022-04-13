@@ -6,12 +6,10 @@ library(bartik.weight)
 ### Replication example ADH: Autor, Dorn, Hanson: The China Syndrome (2013)
 # URL: https://www.aeaweb.org/articles?id=10.1257/aer.103.6.2121
 
-load(file='bartik-weight/R-code/pkg/data/ADH_master.rda')
-load(file='bartik-weight/R-code/pkg/data/ADH_local.rda')
-load(file='bartik-weight/R-code/pkg/data/ADH_global.rda')
+# data is included in the bartik.weight package
 
 # To estimate the Rotemberg weights, it's necessary to transform the local tibble from long to wide format:
-ADH_local %>%
+bartik.weight::ADH_local %>%
   mutate(ind = str_glue("t{year}_sh_ind_{ind}")) %>%
   spread(ind, sh_ind_, fill = 0) %>%
   print() -> ADH_local2
@@ -27,13 +25,13 @@ controls = c("reg_midatl", "reg_encen", "reg_wncen", "reg_satl",
 weight = "timepwt48"
 
 # Prepare variables in the local tibble
-Z = setdiff(names(ADH_local_wide), c("czone", "year"))
+Z = setdiff(names(bartik.weight::ADH_local_wide), c("czone", "year"))
 
 # Prepare variables in the global tibble
 G = "trade_"
 
 # Estimate the weight (alpha) and the IV estimates (beta)
-bw = bw(ADH_master, y, x, controls, weight, ADH_local2, Z, ADH_global, G)
+bw = bw(bartik.weight::ADH_master, y, x, controls, weight, ADH_local2, Z, ADH_global, G)
 bw
 
 bw %>%
