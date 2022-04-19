@@ -108,9 +108,6 @@ iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9 +
 summary(iv_old)
 
 
-covars <- c("l_shind_manuf_cbp", "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen", "reg_wscen", "reg_mount", "reg_pacif", "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
-
-
 stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufacturing employment", covariate.labels = c("Exposure to growing imports"), keep = c("d_impusch_p9", "Constant"), style = "default", type = "text")
 ```
 
@@ -132,7 +129,7 @@ $g$ = Chinese export growth -> workfile9014wwd$d_impotch_p9_lag
 Import penetration $\Delta IP_jt^cu = \Delta M_{jt}^{cu}/(Y_{j91} + M_{j91} - X_{j91})$
 
 
-$x$ and $y$ are the same variables as in the old approach. The import exposure is provided as one single variable by the authors (the $z$: d_impotch_p9_lag). In order to use the bartik.weight R package we need two seperate inputs: The shares z and the shifts $g$
+$x$ and $y$ are the same variables as in the old approach. The import exposure is provided as one single variable by the authors (the $z$: d_impotch_p9_lag). In order to use the bartik.weight R package we need two seperate inputs: The shares $z$ and the shifts $g$
 
 $z$ is the industry share
 $g$ the measure for import penetration
@@ -156,7 +153,7 @@ This is to construct the import penetration measure (the G)
 
 ```{r}
 # New DataFrame
-penetration_j <- exposure
+penetration_j <- exposure # from https://www.ddorn.net/data/sic87dd_exposure_9114.zip
 
 # pen_91, pen_00, pen_14: Import absorption. Calculated as in equation 3. Imports of each industry j divided by domestic market size plus net imports of that industry.
 penetration_j$pen_91 <- penetration_j$l_import_otch_1991 / (penetration_j$market1991 + penetration_j$l_import_otch_1991)
@@ -211,7 +208,7 @@ Run estimation
 
 ```{r}
 # Prepare variables in the master tibble
-y <- "d_sh_empl_mfg_age1839" # change manufactuting employment rate
+y <- "d_sh_empl_mfg_age1839" # change manufacturing employment rate
 x <- "d_impusch_p9" # Growth imports from China to US
 
 controls <- c("l_shind_manuf_cbp", "l_sh_popedu_c", "l_sh_popfborn", "l_sh_empl_f", "l_sh_routine33", "l_task_outsource", "t2", "reg_midatl", "reg_encen", "reg_wncen", "reg_satl", "reg_escen", "reg_wscen", "reg_mount", "reg_pacif", "l_sh_pop_black", "l_sh_pop_asian", "l_sh_pop_oth", "l_sh_pop_hispanic")
