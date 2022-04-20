@@ -57,6 +57,7 @@ download.file("https://www.ddorn.net/data/sic87dd_exposure_9114.zip", temp, mode
 exposure <- read_dta(unz(temp, "sic87dd_exposure_9114.dta"))
 unlink(temp)
 
+# (unused)
 ## Trade flows by sic87dd industry, importer, exporter, and year 1991-2014.
 # Source: https://www.ddorn.net/data
 temp <- tempfile()
@@ -64,6 +65,7 @@ download.file("http://www.ddorn.net/data/china9114.zip", temp, mode = "wb")
 trade_flows <- read_dta(unz(temp, "china9114.dta"))
 unlink(temp)
 
+# (unused)
 ## Provides employment counts by county by industry. The employment numbers are often reported only in brackets.
 # Source: https://www.ddorn.net/data
 temp <- tempfile()

@@ -44,83 +44,60 @@ Load all the data files that are needed for the two replication approaches. The 
 ```{r import-data}
 ## Main data set
 # Source: https://www.ddorn.net/data
-# Note: Can we also use the bartik.weight::ADH_master data?
 temp <- tempfile()
 download.file("https://www.ddorn.net/data/ADH-WWD-FileArchive.zip", temp, mode = "wb")
 master <- read_dta(unz(temp, "ADH-WWD-AERi-Data/dta/workfile9014wwd.dta"))
 unlink(temp)
 
-## Imports from China by sic87dd industry in US and other wealthy countries, 1991-2014.
-# Source: https://www.ddorn.net/data
-temp <- tempfile()
-download.file("https://www.ddorn.net/data/sic87dd_exposure_9114.zip", temp, mode = "wb")
-exposure <- read_dta(unz(temp, "sic87dd_exposure_9114.dta"))
-unlink(temp)
-
-## Provides employment counts by county by industry. The employment numbers are often reported only in brackets.
-# Source: https://www.ddorn.net/data
-temp <- tempfile()
-download.file("https://www.ddorn.net/data/AADHP-GreatSag-FileArchive.zip", temp, mode = "wb")
-ind_shares_data <- read_dta(unz(temp, "AADHP-JOLE-Sag-Replication-2015-05-13/dta/cbp/county/clean/emp_counts/cbp_czone_merged.dta"))
-unlink(temp)
-
-## Local industry share at the community-year-industry level.
+## ADH China Shock: "Global" Industry Growths (year-industry level)
 # Source: https://github.com/paulgp/bartik-weight
-ind_shares_package <- bartik.weight::ADH_local
+ADH_global <- bartik.weight::ADH_global
+
+## ADH China Shock: Local Industry Shares (community-year-industry level)
+# Source: https://github.com/paulgp/bartik-weight
+ADH_local <- bartik.weight::ADH_local
 ```
 
 
 # Old IV Approach
 
-
 1st stage: $x = a_0 + a_1*B + n$  mit $B=z*g$
 2nd stage: $y = b_0 + b_1*x + e$
-
 
 $x$ = Change in import exposure -> master$d_impusch_p9 (endogen)
 $y$ = change manufacturing employment -> master$d_sh_empl_mfg_age1839 (outcome)
 $z$ = Chinese export growth -> master$d_impotch_p9_lag (instrument for endogenous x)
 
-
 Replicates Table 1
 
 overall trade shock (male+female) 
 ```{r}
-iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9 +
-  l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn +
-  l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
-  reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen +
-  reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +
-  l_sh_pop_oth + l_sh_pop_hispanic |
-  d_impotch_p9_lag +
-    l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn +
-    l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 +
-    reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen +
-    reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian +
-    l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data = master)
+iv_old <- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data = master)
 summary(iv_old)
-
 
 stargazer(iv_old, title = "Old Approach", dep.var.labels = "Change in manufacturing employment", covariate.labels = c("Exposure to growing imports"), keep = c("d_impusch_p9", "Constant"), style = "default", type = "text")
 ```
-
-
-
 
 # New Bartik IV Approach
 
 We keep the structure as in the example provided for the bartik weights package (https://rdrr.io/github/jjchern/bartik.weight/f/README.md)
 
-$x$ = Change in import exposure -> master$d_impusch_p9
-$y$ = change manufacturing employment -> master$d_sh_empl_mfg_age1839  
-$z$ = industry shares -> ind_shares_package
-$g$ = Chinese export growth -> workfile9014wwd$d_impotch_p9_lag
+bw(master, y, x, controls = NULL, weight = NULL, local, Z, global, G)
+
+$master$: The master data frame -> master
+$y$: Outcome variable. Change manufacturing employment -> master$d_sh_empl_mfg_age1839 
+$x$: Endogenous variable. Change in import exposure -> master$d_impusch_p9
+$controls$: Control variables (in master)
+$weight$: Weighted variable. Each CZ’s share in the start-of-period population -> timepwt24
+$local$: The local data frame -> bartik.weight::ADH_local (in wide format!)
+$Z$: Local industry shares -> bartik.weight::ADH_local$sh_ind_
+$global$: The global data frame -> ADH_global {bartik.weight}
+$G$: A string for the the overall industry growth rates -> ADH_global$trade_
 
 
 ## Step 1: Construct difference in import penetration variables. Equation 1 in paper
 
 Import penetration $\Delta IP_jt^cu = \Delta M_{jt}^{cu}/(Y_{j91} + M_{j91} - X_{j91})$
-
 
 $x$ and $y$ are the same variables as in the old approach. The import exposure is provided as one single variable by the authors (the $z$: d_impotch_p9_lag). In order to use the bartik.weight R package we need two seperate inputs: The shares $z$ and the shifts $g$
 
@@ -135,10 +112,10 @@ This approach uses as $z$ the weights provided by the bartik.weight package beca
 ```{r}
 # Convert industry shares to wide format as suggested by authors in package description. One could also use the file provided in wide format but this step would allow to transform any file which would probably be supplied in long format.
 
-ind_shares_package %>%
+bartik.weight::ADH_local %>%
   mutate(ind = str_glue("t{year}_sh_ind_{ind}")) %>%
   spread(ind, sh_ind_, fill = 0) %>%
-  print() -> ind_shares_package_wide
+  print() -> ADH_local2
 ```
 
 
