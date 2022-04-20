@@ -239,22 +239,23 @@ bw # y outcome variable
 
 max(bw$alpha)
 
+
 bw %>%
   top_n(5, alpha) %>%
   arrange(desc(alpha)) %>%
   mutate(ind = case_when(
     ind == "3571" ~ "Electronic Computers",
-    ind == "3944" ~ "Games and Toys",
-    ind == "3651" ~ "Household Audio and Video",
-    ind == "3661" ~ "Telephone Apparatus",
-    ind == "3577" ~ "Computer Equipment",
     ind == "3663" ~ "Radio and Television Broadcasting and Communications Equipment",
     ind == "3674" ~ "Semiconductors and Related Devices",
+    ind == "3661" ~ "Telephone Apparatus",
+    ind == "3679" ~ "Electronic Components, Not Elsewhere Classified",
+    ind == "3944" ~ "Games and Toys",
+    ind == "3651" ~ "Household Audio and Video",
+    ind == "3577" ~ "Computer Equipment",
     ind == "3144" ~ "Women's Footwear, Except Athletic"
   )) %>%
-  rename(g = penetration)
+  rename(g = trade_)
 
-# Open question: Why do we estimate the effect for both time-periods?
 
 # Open task: Construct a similar table as Table A1 in the GPSS OA (Summary of the Rotemberg weights: China shock)
 
