@@ -20,8 +20,6 @@ Load relevant packages:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-here::i_am("replication_ADH_2019.Rmd")
-library(here)
 library(tidyverse)
 library(haven)
 library(bartik.weight)
@@ -30,8 +28,6 @@ library(stargazer)
 ```
 
 ```{r setup-visible,  eval=F, echo=T}
-here::i_am("replication_ADH_2019.Rmd")
-library(here)
 library(tidyverse)
 library(haven)
 library(bartik.weight)
@@ -110,11 +106,60 @@ gendershock_f <- ivreg(formula = d_sh_empl_mfg_age1839f ~ d_impuschm_p9cen + d_i
 
 ###Summary Mainshock
 ```{r}
-stargazer(mainshock_mf, mainshock_m, mainshock_f, title = "Table 1, Panel A", dep.var.labels = c("M+F","M","F"), keep = c("d_impusch_p9"), style = "default", type = "text", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration")
+stargazer(mainshock_mf, mainshock_m, mainshock_f, title = "Table 1, Panel A", dep.var.labels = c("M+F","M","F"), keep = c("d_impusch_p9"), style = "default", type = "latex", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration")
+```
+
+###Male-female differential by employment status, age 18–39 
+**Employed**
+```{r}
+mainshock_employment <- ivreg(formula = d_gender_gap_emp_1839 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+```
+
+###Male-female differential in annual earnings ($), age 18–39
+**Mean Earnings**
+```{r}
+mainshock_meanearnings <- ivreg(formula = d_gender_gap_inc1839p50 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_meanearnings <- ivreg(formula = d_gender_gap_inc1839p50 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_meanearnings, gendershock_meanearnings, title = "Title", dep.var.labels = c("Mean Earnings","X"), keep = c("d_impusch_p9", "d_impuschm_p9cen", "d_impuschf_p9cen"), style = "default", type = "latex", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration", digits = 2)
+```
+
+###Male-female differential in idleness, age 18–25
+**Employed**
+```{r}
+mainshock_idleness_emp <- ivreg(formula = d_gender_gap_emp_1825 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_idleness_emp <- ivreg(formula = d_gender_gap_emp_1825 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+```
+
+**Not employed, not in school**
+```{r}
+mainshock_idleness_noempnoschool <- ivreg(formula = d_gender_gap_noedunoemp_1825 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_idleness_noempnoschool <- ivreg(formula = d_gender_gap_noedunoemp_1825 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_idleness_noempnoschool, gendershock_idleness_noempnoschool, title = "Title", dep.var.labels = c("Mean Earnings","X"), keep = c("d_impusch_p9", "d_impuschm_p9cen", "d_impuschf_p9cen"), style = "default", type = "latex", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration", digits = 2)
 ```
 
 
+**Mortality**
+```{r}
+mainshock_mortality <- ivreg(formula = cum_mortmfgap_total ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
 
+gendershock_mortality <- ivreg(formula = cum_mortmfgap_total ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_mortality, gendershock_mortality, title = "Title", dep.var.labels = c("Mean Earnings","X"), keep = c("d_impusch_p9", "d_impuschm_p9cen", "d_impuschf_p9cen"), style = "default", type = "latex", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration", digits = 2)
+```
+
+**Marriage**
+```{r}
+mainshock_marriage <- ivreg(formula = d_sh_fem1839_marrexsep ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_marriage <- ivreg(formula = d_sh_fem1839_marrexsep ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_marriage, gendershock_marriage, title = "Title", dep.var.labels = c("M+F","M","F"), style = "default", type = "latex", dep.var.caption = "Manufacturing employment as a share of population, age 18–39", covariate.labels = "Delta Import Penetration", digits = 2)
+```
 
 # New Bartik IV Approach
 
@@ -171,9 +216,9 @@ sum(bw$alpha[bw$alpha<0])
 mean(bw$alpha[bw$alpha<0])
 sum(bw$alpha<0)/nrow(bw)
 
-sum(bw$alpha[bw$alpha>0])
-mean(bw$alpha[bw$alpha>0])
-sum(bw$alpha>0)/nrow(bw)
+sum(bw$alpha[bw$alpha>=0])
+mean(bw$alpha[bw$alpha>=0])
+sum(bw$alpha>=0)/nrow(bw)
 
 
 # Top five Rotemberg weight industries
