@@ -244,7 +244,7 @@ div.tocify {
 <h1 class="title toc-ignore">ADH 2019 Replication</h1>
 <h4 class="author">Michael Keller</h4>
 <h4 class="author">Benedikt Marxer</h4>
-<h4 class="date">13 4 2022</h4>
+<h4 class="date">25 4 2022</h4>
 
 </div>
 
@@ -255,15 +255,16 @@ div.tocify {
 </div>
 <div id="setup" class="section level1" number="2">
 <h1><span class="header-section-number">2</span> Setup</h1>
-<p>Load relevant packages:</p>
-<pre class="r"><code>here::i_am(&quot;replication_ADH_2019.Rmd&quot;)
-library(here)
-library(tidyverse)
+<p>Before running, install the bartik.weight package (Source: <a href="https://github.com/paulgp/bartik-weight/tree/master/R-code" class="uri">https://github.com/paulgp/bartik-weight/tree/master/R-code</a>):</p>
+<pre class="r"><code># install.packages(&quot;devtools&quot;)
+devtools::install_github(&quot;paulgp/bartik-weight/R-code/pkg&quot;)</code></pre>
+<p>Load all relevant packages:</p>
+<pre class="r"><code>library(tidyverse)
 library(haven)
 library(bartik.weight)
 library(AER)
 library(stargazer)</code></pre>
-<p>Load all the data files that are needed for the two replication approaches. The data frames are named following the Bartik package nomenclature.</p>
+<p>Load all the data files that are needed for the replication. The data frames are named following the Bartik package nomenclature.</p>
 <pre class="r"><code>## Main data set
 # Source: https://www.ddorn.net/data
 temp &lt;- tempfile()
@@ -279,88 +280,231 @@ ADH_global &lt;- bartik.weight::ADH_global
 # Source: https://github.com/paulgp/bartik-weight
 ADH_local &lt;- bartik.weight::ADH_local</code></pre>
 </div>
-<div id="old-iv-approach" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Old IV Approach</h1>
-<p>1st stage: <span class="math inline">\(x = a_0 + a_1*B + n\)</span> mit <span class="math inline">\(B=z*g\)</span> 2nd stage: <span class="math inline">\(y = b_0 + b_1*x + e\)</span></p>
-<p><span class="math inline">\(x\)</span> = Change in import exposure -&gt; master$d_impusch_p9 (endogen) <span class="math inline">\(y\)</span> = change manufacturing employment -&gt; master$d_sh_empl_mfg_age1839 (outcome) <span class="math inline">\(z\)</span> = Chinese export growth -&gt; master$d_impotch_p9_lag (instrument for endogenous x)</p>
-<p>Replicates Table 1</p>
-<p>Overall trade shock (male+female)</p>
-<pre class="r"><code>iv_old &lt;- ivreg(d_sh_empl_mfg_age1839 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data = master)
-summary(iv_old)</code></pre>
+<div id="iv-approach" class="section level1 tabset" number="3">
+<h1 class="tabset"><span class="header-section-number">3</span> IV Approach</h1>
+<p>1st stage: <span class="math inline">\(x = a_0 + a_1*B + n\)</span>, with <span class="math inline">\(B=z*g\)</span><br />
+2nd stage: <span class="math inline">\(y = b_0 + b_1*x + e\)</span></p>
+<p><span class="math inline">\(x\)</span> = Change in import exposure -&gt; <code>master$d_impusch_p9</code> (endogen)<br />
+<span class="math inline">\(y\)</span> = change manufacturing employment -&gt; <code>master$d_sh_empl_mfg_age1839</code> (outcome)<br />
+<span class="math inline">\(z\)</span> = Chinese export growth -&gt; <code>master$d_impotch_p9_lag</code> (instrument for endogenous x)</p>
+<div id="effect-on-employment-status" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Effect on Employment Status</h2>
+<p>Estimated Impact of Manufacturing Trade Shock on Manufacturing Employment by Gender and Gender Differential in Employment Status, Earnings, and Idleness, 1990–2014</p>
+<p><em>I. Overall trade shock</em></p>
+<p><strong>M+F</strong></p>
+<pre class="r"><code>mainshock_mf &lt;- ivreg(formula = d_sh_empl_mfg_age1839 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong>M</strong></p>
+<pre class="r"><code>mainshock_m &lt;- ivreg(formula = d_sh_empl_mfg_age1839m ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong>F</strong></p>
+<pre class="r"><code>mainshock_f &lt;- ivreg(formula = d_sh_empl_mfg_age1839f ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong><em>Summary Mainshock</em></strong></p>
+<pre class="r"><code>stargazer(mainshock_mf, mainshock_m, mainshock_f, title = &quot;I. Overall trade shock&quot;, dep.var.labels = c(&quot;M+F&quot;,&quot;M&quot;,&quot;F&quot;), keep = c(&quot;d_impusch_p9&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Manufacturing employment as a share of population, age 18–39&quot;, covariate.labels = &quot;Change in Import Penetration&quot;)</code></pre>
 <pre><code>## 
-## Call:
-## ivreg(formula = d_sh_empl_mfg_age1839 ~ d_impusch_p9 + l_shind_manuf_cbp + 
-##     l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + 
-##     l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + 
-##     reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + 
-##     l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | 
-##     d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + 
-##         l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + 
-##         reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + 
-##         reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + 
-##         l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, data = master, 
-##     weights = timepwt24)
-## 
-## Residuals:
-##       Min        1Q    Median        3Q       Max 
-## -0.348241 -0.022206 -0.002324  0.022643  0.398029 
-## 
-## Coefficients:
-##                    Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)        8.468232   1.094924   7.734 1.96e-14 ***
-## d_impusch_p9      -1.058440   0.116833  -9.059  &lt; 2e-16 ***
-## l_shind_manuf_cbp -0.063806   0.009732  -6.556 7.70e-11 ***
-## l_sh_popedu_c      0.025005   0.009597   2.606 0.009269 ** 
-## l_sh_popfborn      0.021089   0.009263   2.277 0.022956 *  
-## l_sh_empl_f       -0.078698   0.013482  -5.837 6.57e-09 ***
-## l_sh_routine33    -0.157237   0.024560  -6.402 2.08e-10 ***
-## l_task_outsource   0.308249   0.179238   1.720 0.085691 .  
-## t2                -0.422008   0.114805  -3.676 0.000246 ***
-## reg_midatl         0.309903   0.195389   1.586 0.112943    
-## reg_encen          1.377069   0.196498   7.008 3.72e-12 ***
-## reg_wncen          1.263147   0.210201   6.009 2.36e-09 ***
-## reg_satl           0.055619   0.198386   0.280 0.779244    
-## reg_escen          0.852504   0.247245   3.448 0.000581 ***
-## reg_wscen          0.469112   0.221622   2.117 0.034457 *  
-## reg_mount          0.035158   0.236020   0.149 0.881606    
-## reg_pacif         -0.575780   0.245489  -2.345 0.019142 *  
-## l_sh_pop_black    -0.022936   0.005216  -4.397 1.18e-05 ***
-## l_sh_pop_asian     0.015390   0.025075   0.614 0.539465    
-## l_sh_pop_oth       0.009859   0.010749   0.917 0.359194    
-## l_sh_pop_hispanic -0.023796   0.007055  -3.373 0.000764 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 0.0541 on 1423 degrees of freedom
-## Multiple R-Squared: 0.4065,  Adjusted R-squared: 0.3981 
-## Wald test: 57.15 on 20 and 1423 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>stargazer(iv_old, title = &quot;Old Approach&quot;, dep.var.labels = &quot;Change in manufacturing employment&quot;, covariate.labels = c(&quot;Exposure to growing imports&quot;), keep = c(&quot;d_impusch_p9&quot;, &quot;Constant&quot;), style = &quot;default&quot;, type = &quot;text&quot;)</code></pre>
+## I. Overall trade shock
+## ==============================================================================================
+##                                  Manufacturing employment as a share of population, age 18–39 
+##                                 --------------------------------------------------------------
+##                                         M+F                   M                    F          
+##                                         (1)                  (2)                  (3)         
+## ----------------------------------------------------------------------------------------------
+## Change in Import Penetration         -1.058***            -0.993***            -1.091***      
+##                                       (0.117)              (0.155)              (0.107)       
+##                                                                                               
+## ----------------------------------------------------------------------------------------------
+## Observations                           1,444                1,444                1,444        
+## R2                                     0.406                0.321                0.443        
+## Adjusted R2                            0.398                0.312                0.435        
+## Residual Std. Error (df = 1423)        0.054                0.072                0.050        
+## ==============================================================================================
+## Note:                                                              *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+<p><em>II. Male industry versus female industry shock</em></p>
+<p><strong>M+F</strong></p>
+<pre class="r"><code>gendershock_mf &lt;- ivreg(formula = d_sh_empl_mfg_age1839 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong>M</strong></p>
+<pre class="r"><code>gendershock_m &lt;- ivreg(formula = d_sh_empl_mfg_age1839m ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong>F</strong></p>
+<pre class="r"><code>gendershock_f &lt;- ivreg(formula = d_sh_empl_mfg_age1839f ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong><em>Summary Gendershock</em></strong></p>
+<pre class="r"><code>stargazer(gendershock_mf, gendershock_m, gendershock_f, title = &quot;II. Male industry versus female industry shock&quot;, dep.var.labels = c(&quot;M+F&quot;,&quot;M&quot;,&quot;F&quot;), keep = c(&quot;d_impuschm_p9cen&quot;, &quot;d_impuschf_p9cen&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Manufacturing employment as a share of population, age 18–39&quot;, covariate.labels = c(&quot;IP x Male Ind Share&quot;, &quot;IP x Female Ind Share&quot;))</code></pre>
 <pre><code>## 
-## Old Approach
+## II. Male industry versus female industry shock
+## ==============================================================================================
+##                                  Manufacturing employment as a share of population, age 18–39 
+##                                 --------------------------------------------------------------
+##                                         M+F                   M                    F          
+##                                         (1)                  (2)                  (3)         
+## ----------------------------------------------------------------------------------------------
+## IP x Male Ind Share                  -1.214***            -2.588***              0.198        
+##                                       (0.328)              (0.441)              (0.307)       
+##                                                                                               
+## IP x Female Ind Share                 -0.881**              0.823              -2.559***      
+##                                       (0.386)              (0.520)              (0.361)       
+##                                                                                               
+## ----------------------------------------------------------------------------------------------
+## Observations                           1,444                1,444                1,444        
+## R2                                     0.406                0.300                0.421        
+## Adjusted R2                            0.397                0.290                0.412        
+## Residual Std. Error (df = 1422)        0.054                0.073                0.051        
+## ==============================================================================================
+## Note:                                                              *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+<p><em>III. Male-female differential by employment status, age 18–39</em></p>
+<p><strong>Employed</strong></p>
+<pre class="r"><code>mainshock_employment &lt;- ivreg(formula = d_gender_gap_emp_1839 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+</div>
+<div id="earnings" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Earnings</h2>
+<p>Estimated Impact of Manufacturing Trade Shock on Gender Differential in Earnings, 1990-2014</p>
+<p><strong>Median Earnings</strong></p>
+<pre class="r"><code>mainshock_meanearnings &lt;- ivreg(formula = d_gender_gap_inc1839p50 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_meanearnings &lt;- ivreg(formula = d_gender_gap_inc1839p50 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_meanearnings, gendershock_meanearnings, title = &quot;Estimated Impact of Manufacturing Trade Shock on Gender Differential in Earnings, 1990-2014&quot;, dep.var.labels = c(&quot;Median Earnings&quot;,&quot;Median Earnings&quot;), keep = c(&quot;d_impusch_p9&quot;, &quot;d_impuschm_p9cen&quot;, &quot;d_impuschf_p9cen&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Male-female differential in annual earnings (USD), age 18–39&quot;, covariate.labels = c(&quot;Change in Import Penetration&quot;, &quot;IP x Male Ind Share&quot;, &quot;IP x Female Ind Share&quot;), digits = 2)</code></pre>
+<pre><code>## 
+## Estimated Impact of Manufacturing Trade Shock on Gender Differential in Earnings, 1990-2014
+## ==========================================================================================
+##                              Male-female differential in annual earnings (USD), age 18–39 
+##                              -------------------------------------------------------------
+##                                                     Median Earnings                       
+##                                           (1)                            (2)              
+## ------------------------------------------------------------------------------------------
+## Change in Import Penetration           -445.07***                                         
+##                                         (141.60)                                          
+##                                                                                           
+## IP x Male Ind Share                                                  -2,945.00***         
+##                                                                        (412.49)           
+##                                                                                           
+## IP x Female Ind Share                                                2,399.53***          
+##                                                                        (486.07)           
+##                                                                                           
+## ------------------------------------------------------------------------------------------
+## Observations                             1,444                          1,444             
+## R2                                        0.50                           0.46             
+## Adjusted R2                               0.49                           0.45             
+## Residual Std. Error                65.57 (df = 1423)              68.15 (df = 1422)       
+## ==========================================================================================
+## Note:                                                          *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+</div>
+<div id="idleness" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Idleness</h2>
+<p>Estimated Impact of Manufacturing Trade Shock on Gender Differential in Idleness, 1990–2014</p>
+<p><strong>Employed</strong></p>
+<pre class="r"><code>mainshock_idleness_emp &lt;- ivreg(formula = d_gender_gap_emp_1825 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_idleness_emp &lt;- ivreg(formula = d_gender_gap_emp_1825 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)</code></pre>
+<p><strong>Not employed, not in school</strong></p>
+<pre class="r"><code>mainshock_idleness_noempnoschool &lt;- ivreg(formula = d_gender_gap_noedunoemp_1825 ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_idleness_noempnoschool &lt;- ivreg(formula = d_gender_gap_noedunoemp_1825 ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_idleness_noempnoschool, gendershock_idleness_noempnoschool, title = &quot;Estimated Impact of Manufacturing Trade Shock on Gender Differential in Idleness, 1990–2014&quot;, dep.var.labels = c(&quot;Not employed, not in school&quot;), keep = c(&quot;d_impusch_p9&quot;, &quot;d_impuschm_p9cen&quot;, &quot;d_impuschf_p9cen&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Male-female differential in idleness, age 18–25&quot;, covariate.labels = c(&quot;Change in Import Penetration&quot;, &quot;IP x Male Ind Share&quot;, &quot;IP x Female Ind Share&quot;), digits = 2)</code></pre>
+<pre><code>## 
+## Estimated Impact of Manufacturing Trade Shock on Gender Differential in Idleness, 1990–2014
+## =============================================================================
+##                              Male-female differential in idleness, age 18–25 
+##                              ------------------------------------------------
+##                                        Not employed, not in school           
+##                                        (1)                      (2)          
+## -----------------------------------------------------------------------------
+## Change in Import Penetration         0.66***                                 
+##                                       (0.19)                                 
+##                                                                              
+## IP x Male Ind Share                                           2.60***        
+##                                                               (0.53)         
+##                                                                              
+## IP x Female Ind Share                                         -1.55**        
+##                                                               (0.63)         
+##                                                                              
+## -----------------------------------------------------------------------------
+## Observations                          1,444                    1,444         
+## R2                                     0.13                    0.10          
+## Adjusted R2                            0.12                    0.09          
+## Residual Std. Error              0.09 (df = 1423)        0.09 (df = 1422)    
+## =============================================================================
+## Note:                                             *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+</div>
+<div id="mortality" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> Mortality</h2>
+<p>Estimated Impact of Manufacturing Trade Shock on Gender Differentials in Death Rates, 1990–2015</p>
+<p><strong>Mortality</strong></p>
+<pre class="r"><code>mainshock_mortality &lt;- ivreg(formula = cum_mortmfgap_total ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_mortality &lt;- ivreg(formula = cum_mortmfgap_total ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_mortality, gendershock_mortality, title = &quot;Estimated Impact of Manufacturing Trade Shock on Gender Differentials in Death Rates, 1990–2015&quot;, dep.var.labels = c(&quot;Total Mortality&quot;), keep = c(&quot;d_impusch_p9&quot;, &quot;d_impuschm_p9cen&quot;, &quot;d_impuschf_p9cen&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Male-female death rate differential ages 18–39&quot;, covariate.labels = c(&quot;Change in Import Penetration&quot;, &quot;IP x Male Ind Share&quot;, &quot;IP x Female Ind Share&quot;), digits = 2)</code></pre>
+<pre><code>## 
+## Estimated Impact of Manufacturing Trade Shock on Gender Differentials in Death Rates, 1990–2015
+## ============================================================================
+##                              Male-female death rate differential ages 18–39 
+##                              -----------------------------------------------
+##                                              Total Mortality                
+##                                        (1)                     (2)          
+## ----------------------------------------------------------------------------
+## Change in Import Penetration         42.03**                                
+##                                      (18.67)                                
+##                                                                             
+## IP x Male Ind Share                                           49.47         
+##                                                              (52.35)        
+##                                                                             
+## IP x Female Ind Share                                         33.56         
+##                                                              (61.69)        
+##                                                                             
+## ----------------------------------------------------------------------------
+## Observations                          1,444                   1,444         
+## R2                                    0.64                    0.64          
+## Adjusted R2                           0.64                    0.64          
+## Residual Std. Error             8.65 (df = 1423)        8.65 (df = 1422)    
+## ============================================================================
+## Note:                                            *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+</div>
+<div id="marriage" class="section level2" number="3.5">
+<h2><span class="header-section-number">3.5</span> Marriage</h2>
+<p>Estimated Impact of Manufacturing Trade Shock on Marriage, 1990–2014</p>
+<p><strong>Marriage</strong></p>
+<pre class="r"><code>mainshock_marriage &lt;- ivreg(formula = d_sh_fem1839_marrexsep ~ d_impusch_p9 + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotch_p9_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+gendershock_marriage &lt;- ivreg(formula = d_sh_fem1839_marrexsep ~ d_impuschm_p9cen + d_impuschf_p9cen + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic | d_impotchm_p9cen_lag + d_impotchf_p9cen_lag + l_shind_manuf_cbp + l_sh_popedu_c + l_sh_popfborn + l_sh_empl_f + l_sh_routine33 + l_task_outsource + t2 + reg_midatl + reg_encen + reg_wncen + reg_satl + reg_escen + reg_wscen + reg_mount + reg_pacif + l_sh_pop_black + l_sh_pop_asian + l_sh_pop_oth + l_sh_pop_hispanic, weights = timepwt24, data=master)
+
+stargazer(mainshock_marriage, gendershock_marriage, title = &quot;Estimated Impact of Manufacturing Trade Shock on Marriage, 1990–2014&quot;, dep.var.labels = c(&quot;Married&quot;), keep = c(&quot;d_impusch_p9&quot;, &quot;d_impuschm_p9cen&quot;, &quot;d_impuschf_p9cen&quot;), style = &quot;default&quot;, type = &quot;text&quot;, dep.var.caption = &quot;Women’s marital status&quot;, covariate.labels = c(&quot;Change in Import Penetration&quot;, &quot;IP x Male Ind Share&quot;, &quot;IP x Female Ind Share&quot;), digits = 2)</code></pre>
+<pre><code>## 
+## Estimated Impact of Manufacturing Trade Shock on Marriage, 1990–2014
 ## ==============================================================
-##                                    Dependent variable:        
-##                             ----------------------------------
-##                             Change in manufacturing employment
+##                                   Women’s marital status      
+##                              ---------------------------------
+##                                           Married             
+##                                    (1)              (2)       
 ## --------------------------------------------------------------
-## Exposure to growing imports             -1.058***             
-##                                          (0.117)              
+## Change in Import Penetration     -0.95***                     
+##                                   (0.17)                      
 ##                                                               
-## Constant                                 8.468***             
-##                                          (1.095)              
+## IP x Male Ind Share                               -3.57***    
+##                                                    (0.50)     
+##                                                               
+## IP x Female Ind Share                             2.03***     
+##                                                    (0.59)     
 ##                                                               
 ## --------------------------------------------------------------
-## Observations                              1,444               
-## R2                                        0.406               
-## Adjusted R2                               0.398               
-## Residual Std. Error                 0.054 (df = 1423)         
+## Observations                      1,444            1,444      
+## R2                                 0.73             0.71      
+## Adjusted R2                        0.72             0.70      
+## Residual Std. Error          0.08 (df = 1423) 0.08 (df = 1422)
 ## ==============================================================
 ## Note:                              *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
 </div>
-<div id="new-bartik-iv-approach" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> New Bartik IV Approach</h1>
+</div>
+<div id="bartik.weight-package" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Bartik.weight Package</h1>
 <p>We keep the structure as in the example provided for the bartik weights package (<a href="https://rdrr.io/github/jjchern/bartik.weight/f/README.md" class="uri">https://rdrr.io/github/jjchern/bartik.weight/f/README.md</a>)</p>
-<p>bw(master, y, x, controls = NULL, weight = NULL, local, Z, global, G)</p>
-<p><span class="math inline">\(master\)</span>: The master data frame -&gt; master <span class="math inline">\(y\)</span>: Outcome variable. Change manufacturing employment -&gt; master$d_sh_empl_mfg_age1839 <span class="math inline">\(x\)</span>: Endogenous variable. Change in import exposure -&gt; master$d_impusch_p9 <span class="math inline">\(controls\)</span>: Control variables (in master) <span class="math inline">\(weight\)</span>: Weighted variable. Each CZ’s share in the start-of-period population -&gt; timepwt24 <span class="math inline">\(local\)</span>: The local data frame -&gt; bartik.weight::ADH_local (in wide format!) <span class="math inline">\(Z\)</span>: Local industry shares -&gt; bartik.weight::ADH_local$sh_ind_ <span class="math inline">\(global\)</span>: The global data frame -&gt; ADH_global {bartik.weight} <span class="math inline">\(G\)</span>: A string for the the overall industry growth rates -&gt; ADH_global$trade_</p>
+<p><code>bw(master, y, x, controls = NULL, weight = NULL, local, Z, global, G)</code></p>
+<p><span class="math inline">\(master\)</span>: The master data frame -&gt; <code>master</code><br />
+<span class="math inline">\(y\)</span>: Outcome variable. Change manufacturing employment -&gt; <code>master$d_sh_empl_mfg_age1839</code><br />
+<span class="math inline">\(x\)</span>: Endogenous variable. Change in import exposure -&gt; <code>master$d_impusch_p9</code><br />
+<span class="math inline">\(controls\)</span>: Control variables (in <code>master</code>)<br />
+<span class="math inline">\(weight\)</span>: Weighted variable. Each CZ’s share in the start-of-period population -&gt; <code>timepwt24</code><br />
+<span class="math inline">\(local\)</span>: The local data frame -&gt; <code>bartik.weight::ADH_local</code> (in wide format!)<br />
+<span class="math inline">\(Z\)</span>: Local industry shares -&gt; <code>bartik.weight::ADH_local$sh_ind_</code><br />
+<span class="math inline">\(global\)</span>: The global data frame -&gt; <code>bartik.weight::ADH_global</code><br />
+<span class="math inline">\(G\)</span>: A string for the the overall industry growth rates -&gt; <code>ADH_global$trade_</code></p>
 <pre class="r"><code># Convert industry shares to wide format as suggested by authors in package description.
 ADH_local %&gt;%
   mutate(ind = str_glue(&quot;t{year}_sh_ind_{ind}&quot;)) %&gt;%
@@ -417,21 +561,6 @@ bw </code></pre>
 ##  9  1990 2034  12.2     -0.00283       0.264
 ## 10  1990 2035   5.11    -0.000261      5.18 
 ## # ... with 770 more rows</code></pre>
-<pre class="r"><code># Table A1 (GPSS OA)
-
-# Panel A: Negative and positive weights
-sum(bw$alpha[bw$alpha&lt;0])</code></pre>
-<pre><code>## [1] -0.2065306</code></pre>
-<pre class="r"><code>mean(bw$alpha[bw$alpha&lt;0])</code></pre>
-<pre><code>## [1] -0.0006683839</code></pre>
-<pre class="r"><code>sum(bw$alpha&lt;0)/nrow(bw)</code></pre>
-<pre><code>## [1] 0.3961538</code></pre>
-<pre class="r"><code>sum(bw$alpha[bw$alpha&gt;0])</code></pre>
-<pre><code>## [1] 1.206531</code></pre>
-<pre class="r"><code>mean(bw$alpha[bw$alpha&gt;0])</code></pre>
-<pre><code>## [1] 0.002589122</code></pre>
-<pre class="r"><code>sum(bw$alpha&gt;0)/nrow(bw)</code></pre>
-<pre><code>## [1] 0.5974359</code></pre>
 <pre class="r"><code># Top five Rotemberg weight industries
 bw %&gt;%
   top_n(5, alpha) %&gt;%
@@ -501,11 +630,24 @@ bw %&gt;%
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># Open task: Construct a similar table as Table A1 in the GPSS OA (Summary of the Rotemberg weights: China shock)
-
-bw2 &lt;- bw %&gt;% mutate(c = alpha * beta)
-sum(bw2$c) # is this our estiamte?</code></pre>
-<pre><code>## [1] -1.16365</code></pre>
+<pre class="r"><code># Weight of top five industries
+bw %&gt;%
+  top_n(5, alpha) %&gt;%
+  transmute(sum = sum(alpha)) %&gt;%
+  slice_head(n = 1)</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##     sum
+##   &lt;dbl&gt;
+## 1 0.572</code></pre>
+<pre class="r"><code># Beta estimate from the bartik.weight function
+bw %&gt;% 
+  mutate(b = alpha * beta) %&gt;%
+  transmute(sum = sum(b)) %&gt;%
+  slice_head(n = 1) # similar, but not identical to our previous estimate</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##     sum
+##   &lt;dbl&gt;
+## 1 -1.16</code></pre>
 <p>sessionInfo {utils}: Collect Information About the Current R Session</p>
 <pre class="r"><code>sessioninfo::session_info()</code></pre>
 <pre><code>## - Session info ---------------------------------------------------------------
@@ -518,7 +660,7 @@ sum(bw2$c) # is this our estiamte?</code></pre>
 ##  collate  German_Switzerland.1252
 ##  ctype    German_Switzerland.1252
 ##  tz       Europe/Berlin
-##  date     2022-04-20
+##  date     2022-04-23
 ##  pandoc   2.14.0.3 @ C:/Program Files/RStudio/bin/pandoc/ (via rmarkdown)
 ## 
 ## - Packages -------------------------------------------------------------------
@@ -555,7 +697,6 @@ sum(bw2$c) # is this our estiamte?</code></pre>
 ##  glue            1.6.1   2022-01-22 [1] CRAN (R 4.1.2)
 ##  gtable          0.3.0   2019-03-25 [2] CRAN (R 4.1.1)
 ##  haven         * 2.4.3   2021-08-04 [2] CRAN (R 4.1.1)
-##  here          * 1.0.1   2020-12-13 [1] CRAN (R 4.1.3)
 ##  highr           0.9     2021-04-16 [2] CRAN (R 4.1.1)
 ##  hms             1.1.1   2021-09-26 [2] CRAN (R 4.1.1)
 ##  htmltools       0.5.2   2021-08-25 [2] CRAN (R 4.1.1)
@@ -583,7 +724,6 @@ sum(bw2$c) # is this our estiamte?</code></pre>
 ##  rio             0.5.27  2021-06-21 [2] CRAN (R 4.1.1)
 ##  rlang           1.0.1   2022-02-03 [1] CRAN (R 4.1.2)
 ##  rmarkdown       2.11    2021-09-14 [2] CRAN (R 4.1.1)
-##  rprojroot       2.0.2   2020-11-15 [2] CRAN (R 4.1.1)
 ##  rstudioapi      0.13    2020-11-12 [2] CRAN (R 4.1.1)
 ##  rvest           1.0.2   2021-10-16 [2] CRAN (R 4.1.1)
 ##  sandwich      * 3.0-1   2021-05-18 [1] CRAN (R 4.1.2)
